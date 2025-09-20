@@ -17,6 +17,7 @@ public class TeleOp2526 extends LinearOpMode {
     private DcMotor leftFront;
     private DcMotor leftBack;
     private DcMotor rightBack;
+    //private DcMotor outtake;
     private ElapsedTime runtime = new ElapsedTime();
     public FtcDashboard ftcDashboard;
 
@@ -36,6 +37,8 @@ public class TeleOp2526 extends LinearOpMode {
         leftFront = hardwareMap.get(DcMotor.class, "frontLeft");
         leftBack = hardwareMap.get(DcMotor.class, "backLeft");
         rightBack = hardwareMap.get(DcMotor.class, "backRight");
+
+        //outtake = hardwareMap.get(DcMotor.class,"outtake");
 
 
         // Reset and configure encoders
@@ -88,6 +91,10 @@ public class TeleOp2526 extends LinearOpMode {
             rightFront.setPower(p2);
             leftBack.setPower(p3);
             rightBack.setPower(p4);
+
+//            if (gamepad1.a) {
+//                outtake.setPower(0.5);
+//            }
 
 
             // Push telemetry to the dashboard
