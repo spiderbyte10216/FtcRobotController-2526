@@ -10,11 +10,14 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.util.ElapsedTime;
+import com.qualcomm.robotcore.hardware.CRServo;
 
 @TeleOp(name = "TestOuttake", group = "Mecanum")
 public class TestOuttake extends LinearOpMode {
     private DcMotor outtake;
     private ElapsedTime runtime = new ElapsedTime();
+    private CRServo indexer1;
+    private CRServo indexer2;
     public FtcDashboard ftcDashboard;
 
 
@@ -30,7 +33,11 @@ public class TestOuttake extends LinearOpMode {
 
 
         outtake = hardwareMap.get(DcMotor.class,"outtake");
+        indexer1 = hardwareMap.get(CRServo.class, "indexer1");
+        indexer2 = hardwareMap.get(CRServo.class, "indexer2");
 
+        indexer1.setDirection(CRServo.Direction.FORWARD);
+        indexer2.setDirection(CRServo.Direction.REVERSE);
 
         telemetry.addData("Status", "Initialized");
         telemetry.update();
@@ -41,7 +48,12 @@ public class TestOuttake extends LinearOpMode {
         while (opModeIsActive()) {
 
             if (gamepad1.a) {
-                outtake.setPower(1.0);
+                outtake.setPower(1);
+            }
+
+            if (gamepad1.b){
+                indexer1.setPower(-1.0);
+                indexer2.setPower(-1.0);
             }
 
 
