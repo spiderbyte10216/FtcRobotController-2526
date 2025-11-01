@@ -7,6 +7,7 @@ import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
 import com.acmerobotics.dashboard.FtcDashboard;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.util.ElapsedTime;
@@ -17,7 +18,10 @@ public class TeleOp2526 extends LinearOpMode {
     private DcMotor leftFront;
     private DcMotor leftBack;
     private DcMotor rightBack;
-    //private DcMotor outtake;
+    private DcMotor outtake;
+//    private DcMotor intake;
+    private CRServo indexer1;
+    private CRServo indexer2;
     private ElapsedTime runtime = new ElapsedTime();
     public FtcDashboard ftcDashboard;
 
@@ -33,30 +37,38 @@ public class TeleOp2526 extends LinearOpMode {
         telemetry.update();
 
         // Initialize drivetrain motors
-        rightFront = hardwareMap.get(DcMotor.class, "frontRight");
-        leftFront = hardwareMap.get(DcMotor.class, "frontLeft");
-        leftBack = hardwareMap.get(DcMotor.class, "backLeft");
-        rightBack = hardwareMap.get(DcMotor.class, "backRight");
+        rightFront = hardwareMap.get(DcMotor.class, "rightFront");
+        leftFront = hardwareMap.get(DcMotor.class, "leftFront");
+        leftBack = hardwareMap.get(DcMotor.class, "leftBack");
+        rightBack = hardwareMap.get(DcMotor.class, "rightBack");
 
-        //outtake = hardwareMap.get(DcMotor.class,"outtake");
+        outtake = hardwareMap.get(DcMotor.class,"outtake");
+//        intake = hardwareMap.get(DcMotor.class, "intake");
+        indexer1 = hardwareMap.get(CRServo.class, "indexer1");
+        indexer2 = hardwareMap.get(CRServo.class, "indexer2");
 
 
         // Reset and configure encoders
-        leftFront.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        rightFront.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        leftBack.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        rightBack.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+//        leftFront.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+//        rightFront.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+//        leftBack.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+//        rightBack.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
 
-        leftFront.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        rightFront.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        leftBack.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        rightBack.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        leftFront.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        rightFront.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        leftBack.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        rightBack.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
 
         // Set directions for mecanum drive
         leftFront.setDirection(DcMotorSimple.Direction.FORWARD);
         rightFront.setDirection(DcMotorSimple.Direction.REVERSE);
         leftBack.setDirection(DcMotorSimple.Direction.FORWARD);
         rightBack.setDirection(DcMotorSimple.Direction.REVERSE);
+
+        outtake.setDirection(DcMotorSimple.Direction.REVERSE);
+
+        indexer1.setDirection(CRServo.Direction.FORWARD);
+        indexer2.setDirection(CRServo.Direction.REVERSE);
 
         telemetry.addData("Status", "Initialized");
         telemetry.update();
@@ -86,6 +98,18 @@ public class TeleOp2526 extends LinearOpMode {
                 p4 /= maxval;
             }
 
+//            intake.setPower(0.5);
+
+            if (gamepad1.a) {
+//                indexer1.setPower(-1.0);
+//                indexer2.setPower(-1.0);
+                outtake.setPower(0.6);
+            }
+            if (gamepad1.y) {
+//                indexer1.setPower(0.0);
+//                indexer2.setPower(0.0);
+                outtake.setPower(0.0);
+            }
             // Set motor powers
             leftFront.setPower(p1);
             rightFront.setPower(p2);
