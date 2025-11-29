@@ -1,4 +1,4 @@
-package org.firstinspires.ftc.teamcode;
+package org.firstinspires.ftc.teamcode.PID;
 
 import android.util.Log;
 
@@ -16,7 +16,7 @@ import com.qualcomm.robotcore.hardware.VoltageSensor;
 import com.qualcomm.robotcore.hardware.configuration.typecontainers.MotorConfigurationType;
 
 @Config
-@TeleOp
+@TeleOp(name="ShootingConsistencyTest")
 public class ShootingConsistencyTest extends LinearOpMode {
     public static double MOTOR_TICKS_PER_REV = 28;
     public static double MOTOR_MAX_RPM = 5400;

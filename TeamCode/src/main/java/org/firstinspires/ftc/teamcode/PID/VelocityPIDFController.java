@@ -1,8 +1,9 @@
-package org.firstinspires.ftc.teamcode;
+package org.firstinspires.ftc.teamcode.PID;
 
-import com.acmerobotics.roadrunner.control.PIDCoefficients;
-import com.acmerobotics.roadrunner.control.PIDFController;
-import com.acmerobotics.roadrunner.kinematics.Kinematics;
+import static org.firstinspires.ftc.teamcode.PID.control.PIDFController.epsilonEquals;
+
+import org.firstinspires.ftc.teamcode.PID.control.PIDCoefficients;
+import org.firstinspires.ftc.teamcode.PID.control.PIDFController;
 import com.qualcomm.robotcore.util.MovingStatistics;
 
 public class VelocityPIDFController {
@@ -80,9 +81,24 @@ public class VelocityPIDFController {
         double accel = calculateAccel(measuredPosition, measuredVelocity);
 
         double correction = controller.update(measuredVelocity, accel);
-        double feedforward = Kinematics.calculateMotorFeedforward(
+        double feedforward = calculateMotorFeedforward(
                 controller.getTargetPosition(), controller.getTargetVelocity(), kV, kA, kStatic);
         return correction + feedforward;
+    }
+
+    private double calculateMotorFeedforward(double targetPosition, double targetVelocity, double kV, double kA, double kStatic) {
+        double basePower = targetPosition * kV + targetVelocity * kA;
+        if (epsilonEquals(basePower,0.0)) {
+            return 0.0;
+        } else {
+            int sign;
+            if(basePower >= 0) {
+                sign = 1;
+            } else {
+                sign = -1;
+            }
+            return basePower + sign * kStatic;
+        }
     }
 
     public void reset() {

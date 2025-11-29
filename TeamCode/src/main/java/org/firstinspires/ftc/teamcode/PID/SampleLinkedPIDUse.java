@@ -1,17 +1,14 @@
-package org.firstinspires.ftc.teamcode;
+package org.firstinspires.ftc.teamcode.PID;
 
-import com.acmerobotics.roadrunner.control.PIDCoefficients;
-import com.acmerobotics.roadrunner.control.PIDFController;
+import org.firstinspires.ftc.teamcode.PID.control.PIDCoefficients;
 import com.qualcomm.hardware.lynx.LynxModule;
-import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
-@Disabled
-@TeleOp
+@TeleOp(name="SampleLinkedPIDUse")
 public class SampleLinkedPIDUse extends LinearOpMode {
     // Copy your PID Coefficients here
     public static PIDCoefficients MOTOR_VELO_PID = new PIDCoefficients(0, 0, 0);
