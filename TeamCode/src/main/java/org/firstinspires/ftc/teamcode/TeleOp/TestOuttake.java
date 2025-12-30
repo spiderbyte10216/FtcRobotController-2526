@@ -8,6 +8,7 @@ import com.acmerobotics.dashboard.FtcDashboard;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.robotcore.hardware.CRServo;
@@ -15,7 +16,9 @@ import com.qualcomm.robotcore.hardware.CRServo;
 @TeleOp(name = "TestOuttake", group = "Mecanum")
 public class TestOuttake extends LinearOpMode {
 
-    private DcMotor intake;
+    private DcMotor outtake1;
+    private DcMotor outtake2;
+
     private ElapsedTime runtime = new ElapsedTime();
     public FtcDashboard ftcDashboard;
 
@@ -31,7 +34,8 @@ public class TestOuttake extends LinearOpMode {
         telemetry.update();
 
 
-        intake = hardwareMap.get(DcMotor.class, "intake");
+        outtake1 = hardwareMap.get(DcMotorEx.class, "outtake1");
+        outtake2 = hardwareMap.get(DcMotorEx.class, "outtake2");
 
         telemetry.addData("Status", "Initialized");
         telemetry.update();
@@ -41,22 +45,11 @@ public class TestOuttake extends LinearOpMode {
 
         while (opModeIsActive()) {
 
-            if (gamepad1.a) {
-                intake.setPower(0.8);
-            }
-            if (gamepad1.y) {
-                intake.setPower(0);
+            if (gamepad2.a) {
+                outtake1.setPower(0.5);
+                outtake2.setPower(0.5);
             }
 
-           /* if (gamepad1.b){
-                indexer1.setPower(-1.0);
-                indexer2.setPower(-1.0);
-            } */
-
-
-            // Push telemetry to the dashboard
-            telemetry.addData("Intake Power: ", intake.getPower());
-            telemetry.update();
 
 
 
