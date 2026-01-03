@@ -14,16 +14,9 @@ import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.robotcore.hardware.DigitalChannel;
-import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
-import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
-import com.qualcomm.robotcore.hardware.DcMotor;
-import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.PIDFCoefficients;
-import com.pedropathing.geometry.Pose;
 import com.qualcomm.hardware.limelightvision.LLResult;
 import com.qualcomm.hardware.limelightvision.Limelight3A;
-import com.qualcomm.robotcore.eventloop.opmode.OpMode;
-import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.Pose3D;
@@ -31,8 +24,8 @@ import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
 import org.firstinspires.ftc.teamcode.Limelight.TestBench;
 
 @Config
-@TeleOp(name = "TeleOp2526", group = "Mecanum")
-public class TeleOp2526 extends LinearOpMode {
+@TeleOp(name = "BlueTeleOp2526", group = "Mecanum")
+public class BlueTeleOp2526 extends LinearOpMode {
     private DcMotor rightFront;
     private DcMotor leftFront;
     private DcMotor leftBack;
@@ -70,6 +63,64 @@ public class TeleOp2526 extends LinearOpMode {
     TestBench bench = new TestBench();
 
     private double distance;
+
+    // Flywheel always-on control
+    private double targetFlywheel = 0;
+    private double minTableRpm = 0;
+
+    // Shoot trigger
+    private boolean shootRequested = false;
+
+    private boolean shootEnabled = false;
+    private boolean upWasPressed = false;
+
+    private boolean outtakesStopped = false;
+    private boolean rightTriggerWasPressed = false;
+    private boolean hasValidTag = false;
+
+    private boolean feedStopped = false;
+    private boolean yWasPressed = false;
+
+
+    private static final double[][] DIST_RPM_TABLE = new double[][]{
+            // { distance, rpm }
+            { 91.0, 410 },
+            { 112.0, 420 },
+            { 129.0, 420 },
+            { 144.0, 425 },
+            { 175.0, 425 },
+            { 207.0, 430 },
+            { 230.0, 435 },
+            { 262.0, 435 },
+            { 295.0, 440 },
+            { 373.0, 515 },
+            { 400.0, 520 },
+            { 446.0, 520 }
+    };
+
+
+
+    private static double rpmInterpolate(double dist) {
+        if (dist <= DIST_RPM_TABLE[0][0]) {
+            return DIST_RPM_TABLE[0][1];
+        }
+        if (dist >= DIST_RPM_TABLE[DIST_RPM_TABLE.length - 1][0]) {
+            return DIST_RPM_TABLE[DIST_RPM_TABLE.length - 1][1];
+        }
+
+        for (int i = 0; i < DIST_RPM_TABLE.length - 1; i++) {
+            double d0 = DIST_RPM_TABLE[i][0];
+            double d1 = DIST_RPM_TABLE[i + 1][0];
+            if (dist >= d0 && dist <= d1) {
+                double r0 = DIST_RPM_TABLE[i][1];
+                double r1 = DIST_RPM_TABLE[i + 1][1];
+
+                double t = (dist - d0) / (d1 - d0);
+                return r0 + t * (r1 - r0);
+            }
+        }
+        return DIST_RPM_TABLE[DIST_RPM_TABLE.length-1][1];
+    }
 
 
 
@@ -144,6 +195,10 @@ public class TeleOp2526 extends LinearOpMode {
         indexer2.setPower(0);
         indexer3.setPower(0);
 
+        minTableRpm = DIST_RPM_TABLE[0][1];
+
+        targetFlywheel = minTableRpm;
+
         telemetry.addData("Status", "Initialized");
         telemetry.update();
 
@@ -161,16 +216,31 @@ public class TeleOp2526 extends LinearOpMode {
 
             //get latest limelight result, pipeline 8 for April tag 20
             LLResult llResult = limelight3A.getLatestResult();
-            if (llResult != null && llResult.isValid()) {
+            boolean tagValid = (llResult != null && llResult.isValid());
+            if (tagValid) {
                 Pose3D botpose = llResult.getBotpose_MT2();
                 distance = bench.getDistanceFromTage(llResult.getTa());
+
+                targetFlywheel = rpmInterpolate(distance);
+                hasValidTag = true;
+
                 telemetry.addData("Calculated Distance", distance);
+                telemetry.addData("RPM from table",targetFlywheel);
                 telemetry.addData("Target X", llResult.getTx());
                 telemetry.addData("Target Area", llResult.getTa());
                 telemetry.addData("Botpose", botpose.toString());
 
             } else {
+                hasValidTag = false;
+                targetFlywheel = minTableRpm;
                 telemetry.addLine("No valid result");
+            }
+            if (outtakesStopped) {
+                outtake1.setVelocity(0);
+                outtake2.setVelocity(0);
+            } else {
+                outtake1.setVelocity(targetFlywheel);
+                outtake2.setVelocity(targetFlywheel);
             }
             telemetry.update();
             //move it back to initialization
@@ -215,13 +285,25 @@ public class TeleOp2526 extends LinearOpMode {
 
                 intakeMode = !intakeMode;   // toggle
                 beamBreakEnabled = true;
+                feedStopped = false;
             }
 
             aWasPressed = gamepad2.a;  // remember last state
 
+            boolean upPressed = gamepad2.dpad_up;
+            if (upPressed && !upWasPressed) {
+                shootEnabled = !shootEnabled;
+            }
+            upWasPressed = upPressed;
 
+// use shootEnabled everywhere instead of holding the button
+            shootRequested = shootEnabled;
+
+            if (shootEnabled) {
+                beamBreakEnabled = false;
+            }
             // INTAKE MODE (only when not shooting)
-            if (intakeMode && !runOuttake1) {
+            if (intakeMode && !shootRequested) {
 
                 // intake always on in intakeMode
                 intake.setPower(0.8);
@@ -242,7 +324,7 @@ public class TeleOp2526 extends LinearOpMode {
                     telemetry.addLine("No object detected");
                 }
 
-            } else if (!runOuttake1) {
+            } else if (!shootRequested) {
                 // OFF mode when not shooting and not intaking
                 intake.setPower(0.0);
                 indexer1.setPower(0.0);
@@ -252,61 +334,33 @@ public class TeleOp2526 extends LinearOpMode {
 
 
 
-            // --- INPUTS ---
-            if (gamepad2.dpad_up) {
-                runOuttake1 = true;   // start spinning flywheel
-                runOuttake2 = false;
-                beamBreakEnabled = false;
-
-            }
-
-            if (gamepad2.dpad_down) {
-                runOuttake2 = true;   // start spinning flywheel
-                runOuttake1=false;
-                beamBreakEnabled = false;
-
-            }
-
-            if (gamepad2.y) {
-                runOuttake1 = false;  // stop everything
-            }
-
-            if (gamepad2.x) {
-                runOuttake2 = false;  // stop everything
-            }
 
 // --- CONTROL LOGIC ---
-            boolean runOuttake = runOuttake1 || runOuttake2;
 
-            if (runOuttake) {
-                double targetVelocity = runOuttake2 ? TARGET_VELOCITY_FAR : TARGET_VELOCITY_CLOSE;
+            double v1 = outtake1.getVelocity();
+            double v2 = outtake2.getVelocity();
+            double avgVelocity = (v1 + v2) / 2.0;
 
-                outtake1.setVelocity(targetVelocity);
-                outtake2.setVelocity(targetVelocity);
+            boolean atSpeed = Math.abs(avgVelocity - targetFlywheel) <= VELOCITY_TOLERANCE;
 
-                double v1 = outtake1.getVelocity();
-                double v2 = outtake2.getVelocity();
-                double avgVelocity = (v1 + v2) / 2;
+            telemetry.addData("Shooter Target", targetFlywheel);
+            telemetry.addData("Shooter AvgVel", avgVelocity);
+            telemetry.addData("Shooter AtSpeed", atSpeed);
+            telemetry.addData("Tag Visible", hasValidTag);
 
-                boolean atSpeed = Math.abs(avgVelocity - targetVelocity) <= VELOCITY_TOLERANCE;
-
-                if (atSpeed) {
-                    indexer1.setPower(1);
-                    indexer2.setPower(1);
-                    indexer3.setPower(-1);
-                    intake.setPower(1);
-                } else {
-                    indexer1.setPower(0);
-                    indexer2.setPower(0);
-                    indexer3.setPower(0);
-                }
-            } else {
-                outtake1.setPower(0);
-                outtake2.setPower(0);
+            if (shootRequested && !outtakesStopped && atSpeed) {
+                indexer1.setPower(1);
+                indexer2.setPower(1);
+                indexer3.setPower(-1);
+                intake.setPower(1);
+            } else if (!intakeMode){
+                indexer1.setPower(0);
+                indexer2.setPower(0);
+                indexer3.setPower(0);
             }
 
 
-            if ((!runOuttake1 && !runOuttake2) && gamepad2.dpad_right) {
+            /*if ((!runOuttake1 && !runOuttake2) && gamepad2.dpad_right) {
                 indexer1.setPower(1.0);
                 indexer2.setPower(1.0);
                 indexer3.setPower(-1.0);
@@ -315,11 +369,41 @@ public class TeleOp2526 extends LinearOpMode {
             if ((!runOuttake1 && !runOuttake2) && gamepad2.dpad_left) {
                 outtake1.setPower(0.55);
                 outtake2.setPower(0.55);
+            }*/
+            boolean right_trigger = gamepad2.right_bumper;
+            if (right_trigger && !rightTriggerWasPressed) {
+                outtakesStopped = !outtakesStopped;
             }
+            rightTriggerWasPressed = right_trigger;
 
+            boolean yPressed = gamepad2.y;
+            if (yPressed && !yWasPressed) {
+                feedStopped = !feedStopped;
+
+                // OPTIONAL: when you panic-stop, also turn off intakeMode and shooting
+                // so nothing fights you.
+                if (feedStopped) {
+                    intakeMode = false;
+                    shootEnabled = false;
+                }
+            }
+            yWasPressed = yPressed;
+
+            if (feedStopped) {
+                intake.setPower(0);
+                indexer1.setPower(0);
+                indexer2.setPower(0);
+                indexer3.setPower(0);
+
+                telemetry.addData("FeedStopped", true);
+                telemetry.update();
+                continue; // skips intakeMode + shooting feed logic this loop
+            }
+            telemetry.addData("FeedStopped", false);
 
 
             // Push telemetry to the dashboard
+            telemetry.addData("ShootEnabled", shootEnabled);
             telemetry.addData("Outtake Power1: ", outtake1.getPower());
             telemetry.addData("Outtake Power2: ", outtake2.getPower());
             telemetry.addData("Intake Power: ", intake.getPower());
