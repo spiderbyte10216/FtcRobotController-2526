@@ -108,9 +108,11 @@ public class RedTeleOp2526 extends LinearOpMode {
     private boolean alignWasPressed = false;
 
     // auto-align tuning parameters
-    public static double AIM_KP = 0.015;        // tune
+    public static double AIM_KP = 0.5;        // tune
     public static double AIM_TOLERANCE = 1.0;   // degrees, tune
-    public static double AIM_MAX_POWER = 0.30;  // cap turn power
+    public static double AIM_MAX_POWER = 0.6; // cap turn power
+
+    public static double TX_OFFSET_DEG = -9.0;
 
 
     // DISTANCE-TO-RPM LOOKUP TABLE
@@ -356,23 +358,28 @@ public class RedTeleOp2526 extends LinearOpMode {
             // AUTO-ALIGN LOGIC
             if (autoAlignEnabled) {
                 if (tagValid) {
-                    // Proportional control: rotate to drive (tx = 0)
-                    double turn = -AIM_KP * tx;
 
-                    // clamp turn power to maximum
+                    // Apply offset so "center" isn't exactly tx=0
+                    double txCorrected = tx - TX_OFFSET_DEG;
+
+                    double turn = -AIM_KP * txCorrected;
+
+                    // clamp
                     if (turn > AIM_MAX_POWER) turn = AIM_MAX_POWER;
                     if (turn < -AIM_MAX_POWER) turn = -AIM_MAX_POWER;
 
-                    // override driver rotation with auto-align
                     r = turn;
 
-                    // stop aligning when centered within tolerance
-                    if (Math.abs(tx) <= AIM_TOLERANCE) {
-                        autoAlignEnabled = false; // exit auto-align mode
-                        r = 0.0; // stop rotation
+                    // stop aligning when corrected error is within tolerance
+                    if (Math.abs(txCorrected) <= AIM_TOLERANCE) {
+                        autoAlignEnabled = false;
+                        r = 0.0;
                     }
+
+                    telemetry.addData("txCorrected", txCorrected);
+                    telemetry.addData("TX_OFFSET_DEG", TX_OFFSET_DEG);
+
                 } else {
-                    // lost target: exit auto-align and return control to driver
                     autoAlignEnabled = false;
                     r = rDriver;
                 }
