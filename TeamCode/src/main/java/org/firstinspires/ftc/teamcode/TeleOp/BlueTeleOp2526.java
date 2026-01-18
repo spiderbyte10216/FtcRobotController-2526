@@ -108,11 +108,16 @@ public class BlueTeleOp2526 extends LinearOpMode {
     private boolean alignWasPressed = false;
 
     // auto-align tuning parameters
-    public static double AIM_KP = 0.5;        // tune
+    public static double AIM_KP = 0.3;        // tune
     public static double AIM_TOLERANCE = 1.0;   // degrees, tune
-    public static double AIM_MAX_POWER = 0.60;  // cap turn power
+    public static double AIM_MAX_POWER = 0.40;  // cap turn power
 
-    public static double TX_OFFSET_DEG = 10.0;
+    public static double TX_OFFSET_DEG = 8.0;
+
+    private boolean autoAlignLocked = false;   // prevents re-arming until B is released
+    private int alignStableCount = 0;          // counts consecutive loops within tolerance
+
+    public static int AIM_STABLE_LOOPS = 5;    // tune: how many loops to confirm "done"
 
 
     // DISTANCE-TO-RPM LOOKUP TABLE
@@ -345,13 +350,25 @@ public class BlueTeleOp2526 extends LinearOpMode {
             double y = gamepad1.left_stick_y;  // Forward/backward (inverted for forward)
             double x = -gamepad1.left_stick_x;   // Side-to-side (strafe)
 
-            // check if gamepad1.b button is pressed (toggle auto-align)
+            // check if gamepad1.b button is pressed (start auto-align)
             boolean alignPressed = gamepad1.b;
+
+            // unlock once driver releases B
+            if (!alignPressed) {
+                autoAlignLocked = false;
+            }
+
+            // only allow a new align if:
+            // 1) B was just pressed (rising edge)
+            // 2) we are not already aligning
+            // 3) we are not locked (meaning we haven't released since last completion)
             if (alignPressed && !alignWasPressed) {
-                if (!autoAlignEnabled) {   // ignore presses while already aligning
+                if (!autoAlignEnabled && !autoAlignLocked) {
                     autoAlignEnabled = true;
+                    alignStableCount = 0; // reset stability counter
                 }
             }
+
             alignWasPressed = alignPressed;
 
             double rDriver = -gamepad1.right_stick_x;  // driver rotation
@@ -361,7 +378,6 @@ public class BlueTeleOp2526 extends LinearOpMode {
             if (autoAlignEnabled) {
                 if (tagValid) {
 
-                    // Apply offset so "center" isn't exactly tx=0
                     double txCorrected = tx - TX_OFFSET_DEG;
 
                     double turn = -AIM_KP * txCorrected;
@@ -372,20 +388,31 @@ public class BlueTeleOp2526 extends LinearOpMode {
 
                     r = turn;
 
-                    // stop aligning when corrected error is within tolerance
+                    // require being within tolerance for a few consecutive loops
                     if (Math.abs(txCorrected) <= AIM_TOLERANCE) {
+                        alignStableCount++;
+                    } else {
+                        alignStableCount = 0;
+                    }
+
+                    // done aligning
+                    if (alignStableCount >= AIM_STABLE_LOOPS) {
                         autoAlignEnabled = false;
+                        autoAlignLocked = true;   // <-- this is the key: prevents immediate re-align
                         r = 0.0;
                     }
 
                     telemetry.addData("txCorrected", txCorrected);
-                    telemetry.addData("TX_OFFSET_DEG", TX_OFFSET_DEG);
+                    telemetry.addData("StableCount", alignStableCount);
 
                 } else {
+                    // lost tag -> exit align (and don't lock)
                     autoAlignEnabled = false;
+                    alignStableCount = 0;
                     r = rDriver;
                 }
             }
+
 
             telemetry.addData("AutoAlign", autoAlignEnabled);
             telemetry.addData("tx", tx);

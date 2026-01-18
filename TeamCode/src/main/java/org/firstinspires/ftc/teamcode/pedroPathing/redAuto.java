@@ -39,8 +39,9 @@ public class redAuto extends OpMode {
     private boolean aWasPressed = false;
 
     private boolean feedLatched = false;
-    private static double TARGET_VELOCITY = 425;
-    private static final double VELOCITY_TOLERANCE = 20;
+    private static double TARGET_VELOCITY1 = 410;
+    private  static double TARGET_VELOCITY2 = 400;
+    private static final double VELOCITY_TOLERANCE = 30;
     public static double NEW_P = 25;
     public static double NEW_I = 0.5;
     public static double NEW_D = 1.2;
@@ -50,29 +51,16 @@ public class redAuto extends OpMode {
     private Timer pathTimer, opModeTimer;
 
     public enum PathState {
-        //START POSITION_END POSITION
-        //DRIVE > MOVEMENT STATES
-        //SHOOT > ATTEMPT TO SCORE THE ARTIFACT
-
         DRIVE_STARTPOS_SHOOT_POS,
         SHOOT_PRELOAD,
-
         FIRST_LINE,
-
         THROUGH_FIRST_LINE,
-
         BACK_TO_SHOOT1,
-
         SHOOT_FIRST,
-
         SECOND_LINE,
-
         THROUGH_SECOND_LINE,
-
         BACK_TO_SHOOT2,
-
         SHOOT_SECOND,
-
         READY_TELE
     }
 
@@ -124,13 +112,13 @@ public class redAuto extends OpMode {
     public void buildPaths(){
         //put in coordinates for starting pose > ending pose
         driveStartPosShootPos = follower.pathBuilder()
-                .addPath(new BezierLine(startPose,shootPose))
-                .setLinearHeadingInterpolation(startPose.getHeading(), shootPose.getHeading())
+                .addPath(new BezierLine(startPose,shootPose1))
+                .setLinearHeadingInterpolation(startPose.getHeading(), shootPose1.getHeading())
                 .build();
 
         driveFirstLinePos = follower.pathBuilder()
-                .addPath(new BezierLine(shootPose,firstLine))
-                .setLinearHeadingInterpolation(shootPose.getHeading(), firstLine.getHeading())
+                .addPath(new BezierLine(shootPose1,firstLine))
+                .setLinearHeadingInterpolation(shootPose1.getHeading(), firstLine.getHeading())
                 .build();
 
         driveThroughFirstLinePos = follower.pathBuilder()
@@ -144,8 +132,8 @@ public class redAuto extends OpMode {
                 .build();
 
         driveSecondLinePos = follower.pathBuilder()
-                .addPath(new BezierLine(shootPose, secondLine))
-                .setLinearHeadingInterpolation(shootPose.getHeading(), secondLine.getHeading())
+                .addPath(new BezierLine(shootPose1, secondLine))
+                .setLinearHeadingInterpolation(shootPose1.getHeading(), secondLine.getHeading())
                 .build();
 
         driveThroughSecondLinePos = follower.pathBuilder()
@@ -161,7 +149,7 @@ public class redAuto extends OpMode {
         /*driveReadyTelePos = follower.pathBuilder()
                 .addPath(new BezierLine(shootPose, readyTele))
                 .setLinearHeadingInterpolation(shootPose.getHeading(), readyTele.getHeading())
-                .build();*/
+                .build(); */
     }
     private void doShootPreload() {
         // Read sensor
@@ -173,14 +161,14 @@ public class redAuto extends OpMode {
 
         if (runOuttake) {
             // 1) Spin up outtake to target velocity
-            outtake1.setVelocity(TARGET_VELOCITY);
-            outtake2.setVelocity(TARGET_VELOCITY);
+            outtake1.setVelocity(TARGET_VELOCITY1);
+            outtake2.setVelocity(TARGET_VELOCITY1);
 
             // 2) Check actual velocity (average)
             double v2 = outtake2.getVelocity();
             double v1 = outtake1.getVelocity();
             double avgVelocity = (v1 + v2) / 2;
-            boolean atSpeed = Math.abs(avgVelocity - TARGET_VELOCITY) <= VELOCITY_TOLERANCE;
+            boolean atSpeed = Math.abs(avgVelocity - TARGET_VELOCITY1) <= VELOCITY_TOLERANCE;
 
             // 3) Intake + indexer logic
 
@@ -208,7 +196,7 @@ public class redAuto extends OpMode {
             telemetry.addData("Indexer1 Power: ", indexer1.getPower());
             telemetry.addData("Indexer2 Power: ", indexer2.getPower());
 
-            telemetry.addData("Target Velocity",TARGET_VELOCITY);
+            telemetry.addData("Target Velocity",TARGET_VELOCITY1);
             telemetry.addData("Velocity1",outtake1.getVelocity());
             telemetry.addData("Velocity2",outtake2.getVelocity());
 
@@ -231,11 +219,11 @@ public class redAuto extends OpMode {
 
             // 4) End condition: after some time, stop and move on
             // pathTimer was reset when we entered SHOOT_PRELOAD in setPathState()
-            if (pathTimer.getElapsedTimeSeconds() > 10.0) {  // tweak for how long to shoot
+            if (pathTimer.getElapsedTimeSeconds() > 8.0) {  // tweak for how long to shoot
                 // stop shooter and feeds
                 runOuttake = false;
-                outtake1.setVelocity(0);
-                outtake2.setVelocity(0);
+                //outtake1.setVelocity(0);
+                //outtake2.setVelocity(0);
                 intake.setPower(0.0);
                 indexer1.setPower(0.0);
                 indexer2.setPower(0.0);
@@ -261,14 +249,14 @@ public class redAuto extends OpMode {
 
         if (runOuttake) {
             // 1) Spin up outtake to target velocity
-            outtake1.setVelocity(TARGET_VELOCITY);
-            outtake2.setVelocity(TARGET_VELOCITY);
+            outtake1.setVelocity(TARGET_VELOCITY2);
+            outtake2.setVelocity(TARGET_VELOCITY2);
 
             // 2) Check actual velocity (average)
             double v2 = outtake2.getVelocity();
             double v1 = outtake1.getVelocity();
             double avgVelocity = (v1 + v2) / 2;
-            boolean atSpeed = Math.abs(avgVelocity - TARGET_VELOCITY) <= VELOCITY_TOLERANCE;
+            boolean atSpeed = Math.abs(avgVelocity - TARGET_VELOCITY2) <= VELOCITY_TOLERANCE;
 
             // 3) Intake + indexer logic
 
@@ -296,7 +284,7 @@ public class redAuto extends OpMode {
             telemetry.addData("Indexer1 Power: ", indexer1.getPower());
             telemetry.addData("Indexer2 Power: ", indexer2.getPower());
 
-            telemetry.addData("Target Velocity",TARGET_VELOCITY);
+            telemetry.addData("Target Velocity",TARGET_VELOCITY2);
             telemetry.addData("Velocity1",outtake1.getVelocity());
             telemetry.addData("Velocity2",outtake2.getVelocity());
 
@@ -319,11 +307,11 @@ public class redAuto extends OpMode {
 
             // 4) End condition: after some time, stop and move on
             // pathTimer was reset when we entered SHOOT_PRELOAD in setPathState()
-            if (pathTimer.getElapsedTimeSeconds() > 10.0) {  // tweak for how long to shoot
+            if (pathTimer.getElapsedTimeSeconds() > 5.5) {  // tweak for how long to shoot
                 // stop shooter and feeds
                 runOuttake = false;
-                outtake1.setVelocity(0.0);
-                outtake2.setVelocity(0.0);
+                //outtake1.setVelocity(0.0);
+                //outtake2.setVelocity(0.0);
                 intake.setPower(0.0);
                 indexer1.setPower(0.0);
                 indexer2.setPower(0.0);
@@ -349,14 +337,14 @@ public class redAuto extends OpMode {
 
         if (runOuttake) {
             // 1) Spin up outtake to target velocity
-            outtake1.setVelocity(TARGET_VELOCITY);
-            outtake2.setVelocity(TARGET_VELOCITY);
+            outtake1.setVelocity(TARGET_VELOCITY2);
+            outtake2.setVelocity(TARGET_VELOCITY2);
 
             // 2) Check actual velocity (average)
             double v2 = outtake2.getVelocity();
             double v1 = outtake1.getVelocity();
             double avgVelocity = (v1 + v2) / 2;
-            boolean atSpeed = Math.abs(avgVelocity - TARGET_VELOCITY) <= VELOCITY_TOLERANCE;
+            boolean atSpeed = Math.abs(avgVelocity - TARGET_VELOCITY2) <= VELOCITY_TOLERANCE;
 
             // 3) Intake + indexer logic
 
@@ -384,7 +372,7 @@ public class redAuto extends OpMode {
             telemetry.addData("Indexer1 Power: ", indexer1.getPower());
             telemetry.addData("Indexer2 Power: ", indexer2.getPower());
 
-            telemetry.addData("Target Velocity",TARGET_VELOCITY);
+            telemetry.addData("Target Velocity",TARGET_VELOCITY2);
             telemetry.addData("Velocity1",outtake1.getVelocity());
             telemetry.addData("Velocity2",outtake2.getVelocity());
 
@@ -407,11 +395,11 @@ public class redAuto extends OpMode {
 
             // 4) End condition: after some time, stop and move on
             // pathTimer was reset when we entered SHOOT_PRELOAD in setPathState()
-            if (pathTimer.getElapsedTimeSeconds() > 6.0) {  // tweak for how long to shoot
+            if (pathTimer.getElapsedTimeSeconds() > 5.0) {  // tweak for how long to shoot
                 // stop shooter and feeds
                 runOuttake = false;
-                outtake1.setVelocity(0.0);
-                outtake2.setVelocity(0.0);
+                //outtake1.setVelocity(0.0);
+                //outtake2.setVelocity(0.0);
                 intake.setPower(0.0);
                 indexer1.setPower(0.0);
                 indexer2.setPower(0.0);
@@ -474,7 +462,7 @@ public class redAuto extends OpMode {
     public void statePathUpdate() {
         switch(pathState) {
             case DRIVE_STARTPOS_SHOOT_POS:
-                spinUpOuttake();
+                spinUpOuttake1();
                 if (!startedFirstPath) {
                     follower.followPath(driveStartPosShootPos, true);
                     startedFirstPath = true;
@@ -482,7 +470,7 @@ public class redAuto extends OpMode {
 
                 if (!follower.isBusy()) {
                     telemetry.addLine("Finished Path 1");
-                    setPathState(PathState.SHOOT_PRELOAD);
+                    setPathState(redAuto.PathState.SHOOT_PRELOAD);
                 }
                 break;
             case SHOOT_PRELOAD:
@@ -500,13 +488,12 @@ public class redAuto extends OpMode {
                     telemetry.addLine("Finished Path 2 (to FIRST_LINE)");
                     // As soon as we arrive, go into THROUGH_FIRST_LINE
                     // pathTimer will reset here
-                    setPathState(PathState.THROUGH_FIRST_LINE);
+                    setPathState(redAuto.PathState.THROUGH_FIRST_LINE);
                 }
                 break;
 
             case THROUGH_FIRST_LINE:
                 // Turn on intake + indexers while going through the line
-                stopOuttake(); // optional
                 runAutoIntakeMode();
 
                 if (!startedThirdPath) {
@@ -517,13 +504,13 @@ public class redAuto extends OpMode {
                 // Stay in this state until:
                 //  - path is finished AND
                 //  - we've spent at least 5 seconds here
-                if (!follower.isBusy() && pathTimer.getElapsedTimeSeconds() >= 3.0) {
+                if (!follower.isBusy() && pathTimer.getElapsedTimeSeconds() >= 1.75) {
                     telemetry.addLine("Finished Path 3 + 5s intake through FIRST line");
 
                     // Turn everything off before going back to shoot
                     stopIntakeAndIndexers();
 
-                    setPathState(PathState.BACK_TO_SHOOT1);
+                    setPathState(redAuto.PathState.BACK_TO_SHOOT1);
                 }
                 break;
             case BACK_TO_SHOOT1:
@@ -539,7 +526,7 @@ public class redAuto extends OpMode {
 
                 if (!follower.isBusy()) {
                     telemetry.addLine("Back at shooting position!");
-                    setPathState(PathState.SHOOT_FIRST);
+                    setPathState(redAuto.PathState.SHOOT_FIRST);
                 }
                 break;
             case SHOOT_FIRST:
@@ -556,12 +543,11 @@ public class redAuto extends OpMode {
                 if (!follower.isBusy()) {
                     telemetry.addLine("Finished Path 5 (to SECOND_LINE)");
                     // When we arrive, go into THROUGH_SECOND_LINE
-                    setPathState(PathState.THROUGH_SECOND_LINE);
+                    setPathState(redAuto.PathState.THROUGH_SECOND_LINE);
                 }
                 break;
             case THROUGH_SECOND_LINE:
                 // Intake + indexers on while going through second line
-                stopOuttake();
                 runAutoIntakeMode();
 
                 if (!startedSixthPath) {
@@ -569,29 +555,51 @@ public class redAuto extends OpMode {
                     startedSixthPath = true;
                 }
 
-                if (!follower.isBusy() && pathTimer.getElapsedTimeSeconds() >= 3.0) {
+                if (!follower.isBusy() && pathTimer.getElapsedTimeSeconds() >= 2.5) {
                     telemetry.addLine("Finished Path 6 + 5s intake through SECOND line");
 
                     stopIntakeAndIndexers();
-
+                    setPathState(redAuto.PathState.BACK_TO_SHOOT2);
                 }
+                break;
+            case BACK_TO_SHOOT2:
+                spinUpOuttake();
+
+                if (!startedSeventhPath) {
+                    follower.followPath(driveBackToShootPos2, true);
+                    startedSeventhPath = true;
+                }
+
+                telemetry.addData("Outtake at speed?", outtakeAtSpeed());
+
+                if (!follower.isBusy()) {
+                    telemetry.addLine("Back at shooting position!");
+                    setPathState(redAuto.PathState.SHOOT_SECOND);
+                }
+                break;
+            case SHOOT_SECOND:
+                doShootPreload2();
                 break;
             default:
                 telemetry.addLine("No State Commanded");
                 break;
         }
     }
+    private void spinUpOuttake1() {
+        outtake1.setVelocity(TARGET_VELOCITY1);
+        outtake2.setVelocity(TARGET_VELOCITY1);
+    }
 
     private void spinUpOuttake() {
-        outtake1.setVelocity(TARGET_VELOCITY);
-        outtake2.setVelocity(TARGET_VELOCITY);
+        outtake1.setVelocity(TARGET_VELOCITY2);
+        outtake2.setVelocity(TARGET_VELOCITY2);
     }
 
     private boolean outtakeAtSpeed() {
         double v1 = outtake1.getVelocity();
         double v2 = outtake2.getVelocity();
         double avg = (v1 + v2) / 2.0;
-        return Math.abs(avg - TARGET_VELOCITY) <= VELOCITY_TOLERANCE;
+        return Math.abs(avg - TARGET_VELOCITY1) <= VELOCITY_TOLERANCE;
     }
 
     private void stopOuttake() {
@@ -600,14 +608,14 @@ public class redAuto extends OpMode {
     }
 
 
-    public void setPathState(PathState newState) {
+    public void setPathState(redAuto.PathState newState) {
         pathState = newState;
         pathTimer.resetTimer();
         feedLatched = false;
     }
     @Override
     public void init() {
-        pathState = PathState.DRIVE_STARTPOS_SHOOT_POS;
+        pathState = redAuto.PathState.DRIVE_STARTPOS_SHOOT_POS;
         pathTimer = new Timer();
         opModeTimer = new Timer();
         opModeTimer.resetTimer();
