@@ -555,6 +555,10 @@ public class BlueTeleOp2526 extends LinearOpMode {
                 telemetry.update();
                 continue; // Skip rest of loop (prevents other logic from overriding)
             }
+
+            if(gamepad2.b) {
+                intake.setPower((-1));
+            }
             telemetry.addData("FeedStopped", false);
 
 

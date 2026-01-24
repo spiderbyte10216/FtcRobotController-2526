@@ -77,7 +77,7 @@ public class redAuto extends OpMode {
 
     private final Pose secondLine = new Pose(105.78275475923851,54.49359720605355, Math.toRadians(0));
 
-    private final Pose throughSecondLine = new Pose(129.80963045912654,54.32596041909196, Math.toRadians(0));
+    private final Pose throughSecondLine = new Pose(131.80963045912654,54.32596041909196, Math.toRadians(0));
 
     //private final Pose readyTele = new Pose(112.71668533034715, 70.91036088474971, Math.toRadians(270));
     private PathChain driveStartPosShootPos;
@@ -219,7 +219,7 @@ public class redAuto extends OpMode {
 
             // 4) End condition: after some time, stop and move on
             // pathTimer was reset when we entered SHOOT_PRELOAD in setPathState()
-            if (pathTimer.getElapsedTimeSeconds() > 8.0) {  // tweak for how long to shoot
+            if (pathTimer.getElapsedTimeSeconds() > 8.5) {  // tweak for how long to shoot
                 // stop shooter and feeds
                 runOuttake = false;
                 //outtake1.setVelocity(0);
@@ -307,7 +307,7 @@ public class redAuto extends OpMode {
 
             // 4) End condition: after some time, stop and move on
             // pathTimer was reset when we entered SHOOT_PRELOAD in setPathState()
-            if (pathTimer.getElapsedTimeSeconds() > 5.5) {  // tweak for how long to shoot
+            if (pathTimer.getElapsedTimeSeconds() > 10) {  // tweak for how long to shoot
                 // stop shooter and feeds
                 runOuttake = false;
                 //outtake1.setVelocity(0.0);
@@ -395,7 +395,7 @@ public class redAuto extends OpMode {
 
             // 4) End condition: after some time, stop and move on
             // pathTimer was reset when we entered SHOOT_PRELOAD in setPathState()
-            if (pathTimer.getElapsedTimeSeconds() > 5.0) {  // tweak for how long to shoot
+            if (pathTimer.getElapsedTimeSeconds() > 2.0) {  // tweak for how long to shoot
                 // stop shooter and feeds
                 runOuttake = false;
                 //outtake1.setVelocity(0.0);
@@ -559,10 +559,9 @@ public class redAuto extends OpMode {
                     telemetry.addLine("Finished Path 6 + 5s intake through SECOND line");
 
                     stopIntakeAndIndexers();
-                    setPathState(redAuto.PathState.BACK_TO_SHOOT2);
                 }
                 break;
-            case BACK_TO_SHOOT2:
+            /*case BACK_TO_SHOOT2:
                 spinUpOuttake();
 
                 if (!startedSeventhPath) {
@@ -579,7 +578,7 @@ public class redAuto extends OpMode {
                 break;
             case SHOOT_SECOND:
                 doShootPreload2();
-                break;
+                break; */
             default:
                 telemetry.addLine("No State Commanded");
                 break;

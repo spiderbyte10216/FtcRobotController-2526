@@ -77,7 +77,7 @@ public class blueAuto extends OpMode {
 
     private final Pose secondLine = new Pose(43.08265424912689,54.49359720605355, Math.toRadians(180));
 
-    private final Pose throughSecondLine = new Pose(8.9837019790454,53.32596041909196, Math.toRadians(180));
+    private final Pose throughSecondLine = new Pose(6.9837019790454,53.32596041909196, Math.toRadians(180));
 
     //private final Pose readyTele = new Pose(28.49825378346915, 70.91036088474971, Math.toRadians(90));
     private PathChain driveStartPosShootPos;
@@ -220,7 +220,7 @@ public class blueAuto extends OpMode {
 
             // 4) End condition: after some time, stop and move on
             // pathTimer was reset when we entered SHOOT_PRELOAD in setPathState()
-            if (pathTimer.getElapsedTimeSeconds() > 8.0) {  // tweak for how long to shoot
+            if (pathTimer.getElapsedTimeSeconds() > 9.0) {  // tweak for how long to shoot
                 // stop shooter and feeds
                 runOuttake = false;
                 //outtake1.setVelocity(0);
@@ -308,7 +308,7 @@ public class blueAuto extends OpMode {
 
             // 4) End condition: after some time, stop and move on
             // pathTimer was reset when we entered SHOOT_PRELOAD in setPathState()
-            if (pathTimer.getElapsedTimeSeconds() > 5.5) {  // tweak for how long to shoot
+            if (pathTimer.getElapsedTimeSeconds() > 10) {  // tweak for how long to shoot
                 // stop shooter and feeds
                 runOuttake = false;
                 //outtake1.setVelocity(0.0);
@@ -396,7 +396,7 @@ public class blueAuto extends OpMode {
 
             // 4) End condition: after some time, stop and move on
             // pathTimer was reset when we entered SHOOT_PRELOAD in setPathState()
-            if (pathTimer.getElapsedTimeSeconds() > 5.0) {  // tweak for how long to shoot
+            if (pathTimer.getElapsedTimeSeconds() > 2.0) {  // tweak for how long to shoot
                 // stop shooter and feeds
                 runOuttake = false;
                 //outtake1.setVelocity(0.0);
@@ -560,10 +560,9 @@ public class blueAuto extends OpMode {
                     telemetry.addLine("Finished Path 6 + 5s intake through SECOND line");
 
                     stopIntakeAndIndexers();
-                    setPathState(PathState.BACK_TO_SHOOT2);
                 }
                 break;
-            case BACK_TO_SHOOT2:
+            /*case BACK_TO_SHOOT2:
                 spinUpOuttake();
 
                 if (!startedSeventhPath) {
@@ -580,7 +579,7 @@ public class blueAuto extends OpMode {
                 break;
             case SHOOT_SECOND:
                 doShootPreload2();
-                break;
+                break; */
             default:
                 telemetry.addLine("No State Commanded");
                 break;
