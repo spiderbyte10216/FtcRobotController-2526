@@ -39,9 +39,9 @@ public class redAuto extends OpMode {
     private boolean aWasPressed = false;
 
     private boolean feedLatched = false;
-    private static double TARGET_VELOCITY1 = 410;
+    private static double TARGET_VELOCITY1 = 420;
     private  static double TARGET_VELOCITY2 = 400;
-    private static final double VELOCITY_TOLERANCE = 30;
+    private static final double VELOCITY_TOLERANCE = 25;
     public static double NEW_P = 25;
     public static double NEW_I = 0.5;
     public static double NEW_D = 1.2;
@@ -73,7 +73,7 @@ public class redAuto extends OpMode {
 
     private final Pose firstLine = new Pose(103.0414333706607,81.5946248600224, Math.toRadians(0));
 
-    private final Pose throughFirstLine = new Pose(127.06830907054872,81.15366705471477, Math.toRadians(0));
+    private final Pose throughFirstLine = new Pose(129.06830907054872,81.15366705471477, Math.toRadians(0));
 
     private final Pose secondLine = new Pose(105.78275475923851,54.49359720605355, Math.toRadians(0));
 
@@ -219,7 +219,7 @@ public class redAuto extends OpMode {
 
             // 4) End condition: after some time, stop and move on
             // pathTimer was reset when we entered SHOOT_PRELOAD in setPathState()
-            if (pathTimer.getElapsedTimeSeconds() > 8.5) {  // tweak for how long to shoot
+            if (pathTimer.getElapsedTimeSeconds() > 11) {  // tweak for how long to shoot
                 // stop shooter and feeds
                 runOuttake = false;
                 //outtake1.setVelocity(0);
@@ -307,7 +307,7 @@ public class redAuto extends OpMode {
 
             // 4) End condition: after some time, stop and move on
             // pathTimer was reset when we entered SHOOT_PRELOAD in setPathState()
-            if (pathTimer.getElapsedTimeSeconds() > 10) {  // tweak for how long to shoot
+            if (pathTimer.getElapsedTimeSeconds() > 9) {  // tweak for how long to shoot
                 // stop shooter and feeds
                 runOuttake = false;
                 //outtake1.setVelocity(0.0);
