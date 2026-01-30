@@ -40,7 +40,7 @@ public class blueAuto extends OpMode {
 
     private boolean feedLatched = false;
     private static double TARGET_VELOCITY1 = 420;
-    private static double TARGET_VELOCITY2 = 400;
+    private static double TARGET_VELOCITY2 = 405;
     private static final double VELOCITY_TOLERANCE = 25;
     public static double NEW_P = 25;
     public static double NEW_I = 0.5;
@@ -505,7 +505,7 @@ public class blueAuto extends OpMode {
                 // Stay in this state until:
                 //  - path is finished AND
                 //  - we've spent at least 5 seconds here
-                if (!follower.isBusy() && pathTimer.getElapsedTimeSeconds() >= 1.75) {
+                if (!follower.isBusy() && pathTimer.getElapsedTimeSeconds() >= 2.5) {
                     telemetry.addLine("Finished Path 3 + 5s intake through FIRST line");
 
                     // Turn everything off before going back to shoot

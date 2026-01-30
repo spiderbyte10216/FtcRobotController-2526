@@ -39,8 +39,10 @@ public class blueFarAuto extends OpMode {
     private boolean aWasPressed = false;
 
     private boolean feedLatched = false;
-    private static double TARGET_VELOCITY = 550;
+    private static double TARGET_VELOCITY = 560;
+    private static double TARGET_VELOCITY1 = 535;
     private static final double VELOCITY_TOLERANCE = 20;
+    private static final double VELOCITY_TOLERANCE1 = 25;
     public static double NEW_P = 25;
     public static double NEW_I = 0.5;
     public static double NEW_D = 1.2;
@@ -64,13 +66,15 @@ public class blueFarAuto extends OpMode {
     PathState pathState;
 
     private final Pose startPose = new Pose(56,8, Math.toRadians(90));
-    private final Pose shootPose = new Pose(64.7077267637178,16.004479283314673,Math.toRadians(113));
+    private final Pose shootPose = new Pose(64.7077267637178,16.004479283314673,Math.toRadians(115));
 
 
-    private final Pose readyTele = new Pose(45.54983202687569, 30.2889137737962, Math.toRadians(113));
+
 
     private final Pose firstLine = new Pose(38.7458006718925, 35.51399776035834, Math.toRadians(180));
     private final Pose throughFirstLine = new Pose(11.558790593505043, 35.51399776035834, Math.toRadians(180));
+
+    private final Pose readyTele = new Pose(45.54983202687569, 30.2889137737962, Math.toRadians(115));
     private PathChain driveStartPosShootPos;
 
     private PathChain driveFirstLinePos;
@@ -87,6 +91,8 @@ public class blueFarAuto extends OpMode {
 
     private boolean startedThirdPath = false;
     private boolean startedFourthPath = false;
+
+    private boolean startedFifthPath = false;
 
 
     public void buildPaths(){
@@ -171,7 +177,7 @@ public class blueFarAuto extends OpMode {
             telemetry.update();
             // 4) End condition: after some time, stop and move on
             // pathTimer was reset when we entered SHOOT_PRELOAD in setPathState()
-            if (pathTimer.getElapsedTimeSeconds() > 12.0) {  // tweak for how long to shoot
+            if (pathTimer.getElapsedTimeSeconds() > 11.0) {  // tweak for how long to shoot
                 // stop shooter and feeds
                 runOuttake = false;
                 //outtake1.setVelocity(0);
@@ -201,14 +207,14 @@ public class blueFarAuto extends OpMode {
 
         if (runOuttake) {
             // 1) Spin up outtake to target velocity
-            outtake1.setVelocity(TARGET_VELOCITY);
-            outtake2.setVelocity(TARGET_VELOCITY);
+            outtake1.setVelocity(TARGET_VELOCITY1);
+            outtake2.setVelocity(TARGET_VELOCITY1);
 
             // 2) Check actual velocity (average)
             double v2 = outtake2.getVelocity();
             double v1 = outtake1.getVelocity();
             double avgVelocity = (v1 + v2) / 2;
-            boolean atSpeed = Math.abs(avgVelocity - TARGET_VELOCITY) <= VELOCITY_TOLERANCE;
+            boolean atSpeed = Math.abs(avgVelocity - TARGET_VELOCITY1) <= VELOCITY_TOLERANCE1;
 
             // 3) Intake + indexer logic
 
@@ -236,7 +242,7 @@ public class blueFarAuto extends OpMode {
             telemetry.addData("Indexer1 Power: ", indexer1.getPower());
             telemetry.addData("Indexer2 Power: ", indexer2.getPower());
 
-            telemetry.addData("Target Velocity",TARGET_VELOCITY);
+            telemetry.addData("Target Velocity",TARGET_VELOCITY1);
             telemetry.addData("Velocity1",outtake1.getVelocity());
             telemetry.addData("Velocity2",outtake2.getVelocity());
 
@@ -342,6 +348,7 @@ public class blueFarAuto extends OpMode {
 
             case FIRST_LINE:
                 cleanseIntake();
+                spinUpOuttake1();
                 // Just drive to the first line, no intake yet
                 if (!startedSecondPath) {
                     follower.followPath(driveFirstLinePos, true);
@@ -359,7 +366,7 @@ public class blueFarAuto extends OpMode {
             case THROUGH_FIRST_LINE:
                 // Turn on intake + indexers while going through the line
                 runAutoIntakeMode();
-
+                spinUpOuttake1();
                 if (!startedThirdPath) {
                     follower.followPath(driveThroughFirstLinePos, true);
                     startedThirdPath = true;
@@ -380,14 +387,14 @@ public class blueFarAuto extends OpMode {
             case BACK_TO_SHOOT1:
                 // ✅ spin up while returning
                 runAutoIntakeMode();
-                spinUpOuttake();
+                spinUpOuttake1();
 
                 if (!startedFourthPath) {
                     follower.followPath(driveBackToShootPos1, true);
                     startedFourthPath = true;
                 }
 
-                telemetry.addData("Outtake at speed?", outtakeAtSpeed());
+                telemetry.addData("Outtake at speed?", outtakeAtSpeed1());
 
                 if (!follower.isBusy()) {
                     telemetry.addLine("Back at shooting position!");
@@ -395,16 +402,17 @@ public class blueFarAuto extends OpMode {
                 }
                 break;
             case SHOOT_FIRST:
+                runAutoIntakeMode();
                 doShootPreload1();
                 break;
 
             case READY_TELE:
-                if (!startedSecondPath) {
+                if (!startedFifthPath) {
                     follower.followPath(driveReadyTelePos, true);
-                    startedSecondPath = true;
+                    startedFifthPath = true;
                 }
                 if (!follower.isBusy()) {
-                    telemetry.addLine("Finished Path 2");
+                    telemetry.addLine("Finished Path 5");
                 }
                 break;
 
@@ -419,11 +427,23 @@ public class blueFarAuto extends OpMode {
         outtake2.setVelocity(TARGET_VELOCITY);
     }
 
+    private void spinUpOuttake1() {
+        outtake1.setVelocity(TARGET_VELOCITY1);
+        outtake2.setVelocity(TARGET_VELOCITY1);
+    }
+
     private boolean outtakeAtSpeed() {
         double v1 = outtake1.getVelocity();
         double v2 = outtake2.getVelocity();
         double avg = (v1 + v2) / 2.0;
         return Math.abs(avg - TARGET_VELOCITY) <= VELOCITY_TOLERANCE;
+    }
+
+    private boolean outtakeAtSpeed1() {
+        double v1 = outtake1.getVelocity();
+        double v2 = outtake2.getVelocity();
+        double avg = (v1 + v2) / 2.0;
+        return Math.abs(avg - TARGET_VELOCITY1) <= VELOCITY_TOLERANCE;
     }
 
     public void setPathState(PathState newState) {

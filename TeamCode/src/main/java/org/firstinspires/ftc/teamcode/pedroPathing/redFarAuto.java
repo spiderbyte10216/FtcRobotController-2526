@@ -39,8 +39,10 @@ public class redFarAuto extends OpMode {
     private boolean aWasPressed = false;
 
     private boolean feedLatched = false;
-    private static double TARGET_VELOCITY = 520;
-    private static final double VELOCITY_TOLERANCE = 25;
+    private static double TARGET_VELOCITY = 565;
+    private static double TARGET_VELOCITY1 = 540;
+    private static final double VELOCITY_TOLERANCE = 15;
+    private static final double VELOCITY_TOLERANCE1 = 20;
     public static double NEW_P = 25;
     public static double NEW_I = 0.5;
     public static double NEW_D = 1.2;
@@ -52,23 +54,42 @@ public class redFarAuto extends OpMode {
     public enum PathState {
         DRIVE_STARTPOS_SHOOT_POS,
         SHOOT_PRELOAD,
+        FIRST_LINE,
+
+        THROUGH_FIRST_LINE,
+        BACK_TO_SHOOT1,
+
+        SHOOT_FIRST,
         READY_TELE
     }
 
     PathState pathState;
 
     private final Pose startPose = new Pose(89.174,8, Math.toRadians(90));
-    private final Pose shootPose = new Pose(80.18812989921614,16.6494960806271,Math.toRadians(60));
+    private final Pose shootPose = new Pose(80.18812989921614,16.6494960806271,Math.toRadians(68));
 
+    private final Pose readyTele = new Pose(101.505039193729, 31.740201567749164, Math.toRadians(68));
 
-    private final Pose readyTele = new Pose(101.505039193729, 31.740201567749164, Math.toRadians(60));
+    private final Pose firstLine = new Pose(103.73124300111984, 35.354983202687556, Math.toRadians(0));
+    private final Pose throughFirstLine = new Pose(131.62821948488244, 35.354983202687556, Math.toRadians(0));
     private PathChain driveStartPosShootPos;
 
+    private PathChain driveFirstLinePos;
+
+    private PathChain driveThroughFirstLinePos;
+
     private PathChain driveReadyTelePos;
+
+    private PathChain driveBackToShootPos1;
 
 
     private boolean startedFirstPath = false;
     private boolean startedSecondPath = false;
+
+    private boolean startedThirdPath = false;
+    private boolean startedFourthPath = false;
+
+    private boolean startedFifthPath = false;
 
 
     public void buildPaths(){
@@ -78,10 +99,27 @@ public class redFarAuto extends OpMode {
                 .setLinearHeadingInterpolation(startPose.getHeading(), shootPose.getHeading())
                 .build();
 
+        driveFirstLinePos = follower.pathBuilder()
+                .addPath(new BezierLine(shootPose,firstLine))
+                .setLinearHeadingInterpolation(shootPose.getHeading(), firstLine.getHeading())
+                .build();
+
+        driveThroughFirstLinePos = follower.pathBuilder()
+                .addPath(new BezierLine(firstLine,throughFirstLine))
+                .setLinearHeadingInterpolation(firstLine.getHeading(), throughFirstLine.getHeading())
+                .build();
+
+        driveBackToShootPos1 = follower.pathBuilder()
+                .addPath(new BezierLine(throughFirstLine, shootPose))
+                .setLinearHeadingInterpolation(throughFirstLine.getHeading(), shootPose.getHeading())
+                .build();
+
         driveReadyTelePos = follower.pathBuilder()
                 .addPath(new BezierLine(shootPose,readyTele))
                 .setLinearHeadingInterpolation(shootPose.getHeading(), readyTele.getHeading())
                 .build();
+
+
     }
 
     private void doShootPreload() {
@@ -136,11 +174,99 @@ public class redFarAuto extends OpMode {
             telemetry.update();
             // 4) End condition: after some time, stop and move on
             // pathTimer was reset when we entered SHOOT_PRELOAD in setPathState()
-            if (pathTimer.getElapsedTimeSeconds() > 20.0) {  // tweak for how long to shoot
+            if (pathTimer.getElapsedTimeSeconds() > 12.0) {  // tweak for how long to shoot
                 // stop shooter and feeds
                 runOuttake = false;
                 //outtake1.setVelocity(0);
                 //outtake2.setVelocity(0);
+                intake.setPower(0.0);
+                indexer1.setPower(0.0);
+                indexer2.setPower(0.0);
+
+                // go to next path
+                setPathState(PathState.FIRST_LINE);
+            }
+
+            // Debug telemetry
+            telemetry.addData("SHOOT_PRELOAD atSpeed", atSpeed);
+            telemetry.addData("Outtake v1", v1);
+            telemetry.addData("Laser detected", detected);
+        }
+    }
+
+    private void doShootPreload1() {
+        // Read sensor
+        boolean stateHigh = laserInput.getState();
+        boolean detected = stateHigh;  // HIGH = object present
+
+        // In auto we always want to shoot in this state
+        runOuttake = true;
+
+        if (runOuttake) {
+            // 1) Spin up outtake to target velocity
+            outtake1.setVelocity(TARGET_VELOCITY1);
+            outtake2.setVelocity(TARGET_VELOCITY1);
+
+            // 2) Check actual velocity (average)
+            double v2 = outtake2.getVelocity();
+            double v1 = outtake1.getVelocity();
+            double avgVelocity = (v1 + v2) / 2;
+            boolean atSpeed = Math.abs(avgVelocity - TARGET_VELOCITY1) <= VELOCITY_TOLERANCE1;
+
+            // 3) Intake + indexer logic
+
+            // We'll mimic your TeleOp behavior:
+            //  - intake ON
+            //  - indexer1 always ON while shooting
+            //  - indexer2 stops when laser sees a pixel (to avoid jamming), otherwise runs
+
+            intake.setPower(1.0);
+            indexer1.setPower(1.0);
+
+            if (atSpeed) feedLatched = true;
+
+            if (feedLatched) {
+                indexer1.setPower(1.0);
+                indexer2.setPower(1.0);
+                intake.setPower(1.0);
+            } else {
+                // not up to speed yet, don't feed
+                indexer1.setPower(0.0);
+                indexer2.setPower(0.0);
+                intake.setPower(0.0);
+            }
+
+            telemetry.addData("Indexer1 Power: ", indexer1.getPower());
+            telemetry.addData("Indexer2 Power: ", indexer2.getPower());
+
+            telemetry.addData("Target Velocity",TARGET_VELOCITY1);
+            telemetry.addData("Velocity1",outtake1.getVelocity());
+            telemetry.addData("Velocity2",outtake2.getVelocity());
+
+            telemetry.update();
+
+            /*if (detected) {
+                // object blocking laser -> pause indexer2 to avoid double-feeding
+                indexer2.setPower(0.0);
+            } else {
+                // no object in laser beam -> keep feeding
+                indexer2.setPower(1.0);
+            }*/
+
+            // Optionally: only feed once flywheel is near speed
+            /*if (!atSpeed) {
+                // If you want to be conservative, comment this out if it's over-restrictive
+                indexer1.setPower(0.0);
+                indexer2.setPower(0.0);
+            }*/
+
+            // 4) End condition: after some time, stop and move on
+            // pathTimer was reset when we entered SHOOT_PRELOAD in setPathState()
+            if (pathTimer.getElapsedTimeSeconds() > 10.0) {  // tweak for how long to shoot
+                // stop shooter and feeds
+                runOuttake = false;
+                //outtake1.setVelocity(0.0);
+                //outtake2.setVelocity(0.0);
                 intake.setPower(0.0);
                 indexer1.setPower(0.0);
                 indexer2.setPower(0.0);
@@ -156,6 +282,34 @@ public class redFarAuto extends OpMode {
         }
     }
 
+    // Runs the same "intake mode" logic you use in TeleOp
+    private void runAutoIntakeMode() {
+        // Read the sensor state (true = HIGH, false = LOW)
+        boolean stateHigh = laserInput.getState();
+
+        // Active-HIGH: HIGH means an object is detected
+        boolean detected = stateHigh;
+
+        // In auto, intake mode is only used when we are NOT shooting
+        // intake always on in intakeMode
+        intake.setPower(1.0);
+
+        // indexer1 always on in intakeMode
+        indexer1.setPower(1.0);
+
+        // your rule:
+        // nothing detected  -> indexer2 ON
+        // something detected -> indexer2 OFF
+        if (detected) {
+            indexer2.setPower(0.0);
+            telemetry.addLine("Intake: Object detected!");
+        } else {
+            indexer2.setPower(1.0);
+            telemetry.addLine("Intake: No object detected");
+        }
+
+    }
+
     // Simple helper to turn intake/indexers off
     private void stopIntakeAndIndexers() {
         intake.setPower(0.0);
@@ -163,6 +317,12 @@ public class redFarAuto extends OpMode {
         indexer2.setPower(0.0);
     }
 
+    private void cleanseIntake() {
+        intake.setPower(-1.0);
+        if (pathTimer.getElapsedTimeSeconds() > 1.0) {  // tweak for how long to shoot
+            intake.setPower(0.0);
+        }
+    }
 
 
     public void statePathUpdate() {
@@ -182,15 +342,78 @@ public class redFarAuto extends OpMode {
             case SHOOT_PRELOAD:
                 doShootPreload();
                 break;
-            case READY_TELE:
+
+            case FIRST_LINE:
+                cleanseIntake();
+                spinUpOuttake1();
+                // Just drive to the first line, no intake yet
                 if (!startedSecondPath) {
-                    follower.followPath(driveReadyTelePos, true);
+                    follower.followPath(driveFirstLinePos, true);
                     startedSecondPath = true;
                 }
+
                 if (!follower.isBusy()) {
-                    telemetry.addLine("Finished Path 2");
+                    telemetry.addLine("Finished Path 2 (to FIRST_LINE)");
+                    // As soon as we arrive, go into THROUGH_FIRST_LINE
+                    // pathTimer will reset here
+                    setPathState(redFarAuto.PathState.THROUGH_FIRST_LINE);
                 }
                 break;
+
+            case THROUGH_FIRST_LINE:
+                // Turn on intake + indexers while going through the line
+                runAutoIntakeMode();
+                spinUpOuttake1();
+                if (!startedThirdPath) {
+                    follower.followPath(driveThroughFirstLinePos, true);
+                    startedThirdPath = true;
+                }
+
+                // Stay in this state until:
+                //  - path is finished AND
+                //  - we've spent at least 5 seconds here
+                if (!follower.isBusy() && pathTimer.getElapsedTimeSeconds() >= 2.5) {
+                    telemetry.addLine("Finished Path 3 + 5s intake through FIRST line");
+
+                    // Turn everything off before going back to shoot
+                    stopIntakeAndIndexers();
+
+                    setPathState(redFarAuto.PathState.BACK_TO_SHOOT1);
+                }
+                break;
+            case BACK_TO_SHOOT1:
+                // ✅ spin up while returning
+                runAutoIntakeMode();
+                spinUpOuttake1();
+
+                if (!startedFourthPath) {
+                    follower.followPath(driveBackToShootPos1, true);
+                    startedFourthPath = true;
+                }
+
+                telemetry.addData("Outtake at speed?", outtakeAtSpeed1());
+
+                if (!follower.isBusy()) {
+                    telemetry.addLine("Back at shooting position!");
+                    setPathState(redFarAuto.PathState.SHOOT_FIRST);
+                }
+                break;
+            case SHOOT_FIRST:
+                runAutoIntakeMode();
+                doShootPreload1();
+                break;
+
+            case READY_TELE:
+                if (!startedFifthPath) {
+                    follower.followPath(driveReadyTelePos, true);
+                    startedFifthPath = true;
+                }
+                if (!follower.isBusy()) {
+                    telemetry.addLine("Finished Path 5");
+                }
+                break;
+
+
             default:
                 telemetry.addLine("No State Commanded");
                 break;
@@ -199,6 +422,25 @@ public class redFarAuto extends OpMode {
     private void spinUpOuttake() {
         outtake1.setVelocity(TARGET_VELOCITY);
         outtake2.setVelocity(TARGET_VELOCITY);
+    }
+
+    private void spinUpOuttake1() {
+        outtake1.setVelocity(TARGET_VELOCITY1);
+        outtake2.setVelocity(TARGET_VELOCITY1);
+    }
+
+    private boolean outtakeAtSpeed() {
+        double v1 = outtake1.getVelocity();
+        double v2 = outtake2.getVelocity();
+        double avg = (v1 + v2) / 2.0;
+        return Math.abs(avg - TARGET_VELOCITY) <= VELOCITY_TOLERANCE;
+    }
+
+    private boolean outtakeAtSpeed1() {
+        double v1 = outtake1.getVelocity();
+        double v2 = outtake2.getVelocity();
+        double avg = (v1 + v2) / 2.0;
+        return Math.abs(avg - TARGET_VELOCITY1) <= VELOCITY_TOLERANCE;
     }
 
     public void setPathState(PathState newState) {

@@ -40,7 +40,7 @@ public class redAuto extends OpMode {
 
     private boolean feedLatched = false;
     private static double TARGET_VELOCITY1 = 420;
-    private  static double TARGET_VELOCITY2 = 400;
+    private static double TARGET_VELOCITY2 = 400;
     private static final double VELOCITY_TOLERANCE = 25;
     public static double NEW_P = 25;
     public static double NEW_I = 0.5;
@@ -69,17 +69,24 @@ public class redAuto extends OpMode {
     private final Pose startPose = new Pose(124,122, Math.toRadians(45));
     private final Pose shootPose = new Pose(86.91601343784994,88.51222351571596,Math.toRadians(45));
 
+
     private final Pose shootPose1 = new Pose(98.36506159014557,97.39753639417694, Math.toRadians(45));
+
 
     private final Pose firstLine = new Pose(103.0414333706607,81.5946248600224, Math.toRadians(0));
 
+
     private final Pose throughFirstLine = new Pose(129.06830907054872,81.15366705471477, Math.toRadians(0));
+
 
     private final Pose secondLine = new Pose(105.78275475923851,54.49359720605355, Math.toRadians(0));
 
+
     private final Pose throughSecondLine = new Pose(131.80963045912654,54.32596041909196, Math.toRadians(0));
 
-    //private final Pose readyTele = new Pose(112.71668533034715, 70.91036088474971, Math.toRadians(270));
+
+//private final Pose readyTele = new Pose(112.71668533034715, 70.91036088474971, Math.toRadians(270));
+
     private PathChain driveStartPosShootPos;
 
     private PathChain driveFirstLinePos;
@@ -151,6 +158,7 @@ public class redAuto extends OpMode {
                 .setLinearHeadingInterpolation(shootPose.getHeading(), readyTele.getHeading())
                 .build(); */
     }
+
     private void doShootPreload() {
         // Read sensor
         boolean stateHigh = laserInput.getState();
@@ -219,7 +227,7 @@ public class redAuto extends OpMode {
 
             // 4) End condition: after some time, stop and move on
             // pathTimer was reset when we entered SHOOT_PRELOAD in setPathState()
-            if (pathTimer.getElapsedTimeSeconds() > 11) {  // tweak for how long to shoot
+            if (pathTimer.getElapsedTimeSeconds() > 11.0) {  // tweak for how long to shoot
                 // stop shooter and feeds
                 runOuttake = false;
                 //outtake1.setVelocity(0);
@@ -229,7 +237,7 @@ public class redAuto extends OpMode {
                 indexer2.setPower(0.0);
 
                 // go to next path
-                setPathState(redAuto.PathState.FIRST_LINE);
+                setPathState(PathState.FIRST_LINE);
             }
 
             // Debug telemetry
@@ -317,7 +325,7 @@ public class redAuto extends OpMode {
                 indexer2.setPower(0.0);
 
                 // go to next path
-                setPathState(redAuto.PathState.SECOND_LINE);
+                setPathState(PathState.SECOND_LINE);
             }
 
             // Debug telemetry
@@ -405,7 +413,7 @@ public class redAuto extends OpMode {
                 indexer2.setPower(0.0);
 
                 // go to next path
-                setPathState(redAuto.PathState.READY_TELE);
+                setPathState(PathState.READY_TELE);
             }
 
             // Debug telemetry
@@ -470,7 +478,7 @@ public class redAuto extends OpMode {
 
                 if (!follower.isBusy()) {
                     telemetry.addLine("Finished Path 1");
-                    setPathState(redAuto.PathState.SHOOT_PRELOAD);
+                    setPathState(PathState.SHOOT_PRELOAD);
                 }
                 break;
             case SHOOT_PRELOAD:
@@ -488,7 +496,7 @@ public class redAuto extends OpMode {
                     telemetry.addLine("Finished Path 2 (to FIRST_LINE)");
                     // As soon as we arrive, go into THROUGH_FIRST_LINE
                     // pathTimer will reset here
-                    setPathState(redAuto.PathState.THROUGH_FIRST_LINE);
+                    setPathState(PathState.THROUGH_FIRST_LINE);
                 }
                 break;
 
@@ -504,17 +512,18 @@ public class redAuto extends OpMode {
                 // Stay in this state until:
                 //  - path is finished AND
                 //  - we've spent at least 5 seconds here
-                if (!follower.isBusy() && pathTimer.getElapsedTimeSeconds() >= 1.75) {
+                if (!follower.isBusy() && pathTimer.getElapsedTimeSeconds() >= 2.5) {
                     telemetry.addLine("Finished Path 3 + 5s intake through FIRST line");
 
                     // Turn everything off before going back to shoot
                     stopIntakeAndIndexers();
 
-                    setPathState(redAuto.PathState.BACK_TO_SHOOT1);
+                    setPathState(PathState.BACK_TO_SHOOT1);
                 }
                 break;
             case BACK_TO_SHOOT1:
                 // ✅ spin up while returning
+                runAutoIntakeMode();
                 spinUpOuttake();
 
                 if (!startedFourthPath) {
@@ -526,7 +535,7 @@ public class redAuto extends OpMode {
 
                 if (!follower.isBusy()) {
                     telemetry.addLine("Back at shooting position!");
-                    setPathState(redAuto.PathState.SHOOT_FIRST);
+                    setPathState(PathState.SHOOT_FIRST);
                 }
                 break;
             case SHOOT_FIRST:
@@ -543,7 +552,7 @@ public class redAuto extends OpMode {
                 if (!follower.isBusy()) {
                     telemetry.addLine("Finished Path 5 (to SECOND_LINE)");
                     // When we arrive, go into THROUGH_SECOND_LINE
-                    setPathState(redAuto.PathState.THROUGH_SECOND_LINE);
+                    setPathState(PathState.THROUGH_SECOND_LINE);
                 }
                 break;
             case THROUGH_SECOND_LINE:
@@ -573,7 +582,7 @@ public class redAuto extends OpMode {
 
                 if (!follower.isBusy()) {
                     telemetry.addLine("Back at shooting position!");
-                    setPathState(redAuto.PathState.SHOOT_SECOND);
+                    setPathState(PathState.SHOOT_SECOND);
                 }
                 break;
             case SHOOT_SECOND:
@@ -607,14 +616,14 @@ public class redAuto extends OpMode {
     }
 
 
-    public void setPathState(redAuto.PathState newState) {
+    public void setPathState(PathState newState) {
         pathState = newState;
         pathTimer.resetTimer();
         feedLatched = false;
     }
     @Override
     public void init() {
-        pathState = redAuto.PathState.DRIVE_STARTPOS_SHOOT_POS;
+        pathState = PathState.DRIVE_STARTPOS_SHOOT_POS;
         pathTimer = new Timer();
         opModeTimer = new Timer();
         opModeTimer.resetTimer();
@@ -670,6 +679,7 @@ public class redAuto extends OpMode {
         telemetry.addData("heading", follower.getPose().getHeading());
         telemetry.addData("Path time", pathTimer.getElapsedTimeSeconds());
     }
+
 
 
 }
