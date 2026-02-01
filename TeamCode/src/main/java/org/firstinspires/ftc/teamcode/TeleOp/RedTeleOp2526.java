@@ -66,7 +66,7 @@ public class RedTeleOp2526 extends LinearOpMode {
 
     private boolean beamBreakEnabled = true; //enable/disable beam break
 
-    public static double VELOCITY_TOLERANCE = 25; //tolerance range for considering flywheel atSpeed
+    public static double VELOCITY_TOLERANCE = 20; //tolerance range for considering flywheel atSpeed
 
     //PIDF coefficients for flywheel velocity
     public static double NEW_P = 25;
@@ -172,7 +172,7 @@ public class RedTeleOp2526 extends LinearOpMode {
                 double t = (dist - d0) / (d1 - d0);
 
                 // liner interpolation formula
-                return r0 + t * (r1 - r0);
+                return r0 + t * (r1 - r0) - 20;
             }
         }
 

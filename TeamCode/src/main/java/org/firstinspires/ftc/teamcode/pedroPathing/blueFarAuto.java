@@ -39,10 +39,10 @@ public class blueFarAuto extends OpMode {
     private boolean aWasPressed = false;
 
     private boolean feedLatched = false;
-    private static double TARGET_VELOCITY = 560;
-    private static double TARGET_VELOCITY1 = 535;
+    private static double TARGET_VELOCITY = 535;
+    private static double TARGET_VELOCITY1 = 525;
     private static final double VELOCITY_TOLERANCE = 20;
-    private static final double VELOCITY_TOLERANCE1 = 25;
+    private static final double VELOCITY_TOLERANCE1 = 20;
     public static double NEW_P = 25;
     public static double NEW_I = 0.5;
     public static double NEW_D = 1.2;
